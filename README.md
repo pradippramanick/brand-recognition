@@ -2,11 +2,15 @@
 
 Questo documento fornisce le istruzioni per configurare il progetto su **Linux** e **Windows**.
 
+## Prerequisiti
+
+Python 3.12 o precedenti
+
 ## **Setup su Linux**
 
 ### 1. **Clonare il repository**
 
-Se non l'hai già fatto, clona il repository nella cartella desiderata:
+Se non l'hai già fatto, clona il repository sulla Scrivania:
 
 ```bash
 git clone https://github.com/Francescasba/brand.git
@@ -35,11 +39,10 @@ Se lo script di setup non funziona correttamente, verifica che il sistema abbia 
 ## **Setup su Windows**
 ### 1. **Clonare il repository**
 
-Se non l'hai già fatto, clona il repository nella cartella desiderata:
+Se non l'hai già fatto, clona il repository sul desktop:
 
 ```bash
 git clone https://github.com/Francescasba/brand.git
-cd brand
 ```
 
 ### 2. **Eseguire lo script di setup**

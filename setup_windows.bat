@@ -1,58 +1,77 @@
 @echo off
-setlocal enabledelayedexpansion
+SETLOCAL ENABLEEXTENSIONS
+cd /d %~dp0
 
-REM === Impostazioni ===
+:: === Impostazioni ===
 set VENV_DIR=.venv
+set FONTFILE=fonts\InterVariable.ttf
+set FONTNAME=InterVariable.ttf
+set FONTDEST=%WINDIR%\Fonts
+set DESKTOP=%USERPROFILE%\Desktop
+
+:: === Script e icone ===
 set ENTRY_SCRIPT_SERVER=script\server.bat
 set ENTRY_SCRIPT_OPERATOR=script\operator.bat
 set ENTRY_SCRIPT_ADMIN=script\admin.bat
-set FONT_SRC_DIR=fonts
-set FONT_NAME=*.ttf
-set FONT_DEST=%WINDIR%\Fonts
+set ICON_SERVER=icon\server.ico
+set ICON_OPERATOR=icon\operatore.ico
+set ICON_ADMIN=icon\amministratore.ico
 
-set ICON_PATH_SERVER=icon\server.ico
-set ICON_PATH_OPERATOR=icon\operatore.ico
-set ICON_PATH_ADMIN=icon\amministratore.ico
+:: === Controllo file
+if not exist requirements.txt (
+    echo ERRORE: requirements.txt non trovato!
+    pause
+    exit /b
+)
 
-set SHORTCUT_SERVER=%USERPROFILE%\Desktop\server.lnk
-set SHORTCUT_OPERATOR=%USERPROFILE%\Desktop\operatore.lnk
-set SHORTCUT_ADMIN=%USERPROFILE%\Desktop\admin.lnk
+if not exist fonts\*.ttf (
+    echo ERRORE: Nessun file TTF trovato nella cartella fonts\
+    pause
+    exit /b
+)
 
-REM === Ambiente virtuale ===
-IF NOT EXIST %VENV_DIR% (
-    echo Creazione dell'ambiente virtuale...
+:: === Creazione ambiente virtuale ===
+if not exist %VENV_DIR% (
+    echo Creazione ambiente virtuale...
     python -m venv %VENV_DIR%
 )
 
-call %VENV_DIR%\Scripts\activate.bat
-pip install --upgrade pip
-pip install -r requirements.txt
+:: Aggiorna pip
+%VENV_DIR%\Scripts\python.exe -m pip install --upgrade pip
 
-REM === Installazione font ===
-echo Installazione del font...
-for %%f in (%FONT_SRC_DIR%\%FONT_NAME%) do (
-    copy "%%f" "%FONT_DEST%" >nul
-    reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" /v "%%~nxf (TrueType)" /t REG_SZ /d "%%~nxf" /f >nul 2>&1
-)
-
-if %errorlevel% neq 0 (
-    echo [!] Font copiato, ma non registrato (forse servono permessi amministrativi).
+:: Installa requirements
+if exist requirements.txt (
+    echo Installazione pacchetti...
+    for /f "delims=" %%i in (requirements.txt) do (
+        echo Installando %%i...
+        %VENV_DIR%\Scripts\python.exe -m pip install %%i
+        if errorlevel 1 (
+            echo ERRORE durante l'installazione di %%i
+            pause
+            exit /b
+        )
+    )
 ) else (
-    echo Font installato in %FONT_DEST%.
+    echo ERRORE: requirements.txt non trovato
+    pause
+    exit /b
 )
 
-REM === Collegamenti sul desktop ===
-set PYTHON_PATH=%CD%\%VENV_DIR%\Scripts\python.exe
+:: Copia il font nella cartella Fonts di sistema
+copy %FONTFILE% %FONTDEST% >nul
 
-REM Collegamento Server
-powershell -Command "$s = (New-Object -COM WScript.Shell).CreateShortcut('%SHORTCUT_SERVER%'); $s.TargetPath = '%PYTHON_PATH%'; $s.Arguments = '%CD%\%ENTRY_SCRIPT_SERVER%'; $s.IconLocation = '%CD%\%ICON_PATH_SERVER%'; $s.WindowStyle = 1; $s.Save()"
+:: Registra il font nel registro di sistema
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" /v "Inter Variable (TrueType)" /t REG_SZ /d "%FONTNAME%" /f
 
-REM Collegamento Operatore
-powershell -Command "$s = (New-Object -COM WScript.Shell).CreateShortcut('%SHORTCUT_OPERATOR%'); $s.TargetPath = '%PYTHON_PATH%'; $s.Arguments = '%CD%\%ENTRY_SCRIPT_OPERATOR%'; $s.IconLocation = '%CD%\%ICON_PATH_OPERATOR%'; $s.WindowStyle = 1; $s.Save()"
+echo Font installato correttamente.
 
-REM Collegamento Admin
-powershell -Command "$s = (New-Object -COM WScript.Shell).CreateShortcut('%SHORTCUT_ADMIN%'); $s.TargetPath = '%PYTHON_PATH%'; $s.Arguments = '%CD%\%ENTRY_SCRIPT_ADMIN%'; $s.IconLocation = '%CD%\%ICON_PATH_ADMIN%'; $s.WindowStyle = 1; $s.Save()"
+:: Collegamenti
+echo Creazione scorciatoie sul Desktop...
 
-echo Collegamenti creati sul desktop.
+powershell -Command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%DESKTOP%\Server.lnk');$s.TargetPath='%CD%\%ENTRY_SCRIPT_SERVER%';$s.IconLocation='%CD%\%ICON_SERVER%';$s.Save()"
+powershell -Command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%DESKTOP%\Operatore.lnk');$s.TargetPath='%CD%\%ENTRY_SCRIPT_OPERATOR%';$s.IconLocation='%CD%\%ICON_OPERATOR%';$s.Save()"
+powershell -Command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%DESKTOP%\Admin.lnk');$s.TargetPath='%CD%\%ENTRY_SCRIPT_ADMIN%';$s.IconLocation='%CD%\%ICON_ADMIN%';$s.Save()"
 
-endlocal
+echo Setup completato con successo.
+pause
+ENDLOCAL
