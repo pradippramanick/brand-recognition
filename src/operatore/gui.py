@@ -9,7 +9,6 @@ import time
 from controller import Controller
 from vad import Vad
 from listener import Listener
-from mic import MicKeepAlive
 
 class OperatorApp(ctk.CTk, Listener):
     def __init__(self):
@@ -41,7 +40,7 @@ class OperatorApp(ctk.CTk, Listener):
         self.conn = None
         self.vad = None
         self.vad_thread = None
-        self.mic_keep_alive = None
+        self.pavucontrol = None
 
         self.connection_page()
 
@@ -254,7 +253,9 @@ class OperatorApp(ctk.CTk, Listener):
         self.img_chiusura = Image.open("img/chiusura.png")
 
     def init_vad(self):
-        self.mic_keep_alive = MicKeepAlive()
+        self.pavucontrol = subprocess.Popen(["pavucontrol"])   # Avvia il processo pavucontrol in background
+        time.sleep(1)
+        subprocess.run(["wmctrl", "-r", "PulseAudio Volume Control", "-b", "add,hidden"])  # Minimizza la finestra
  
         hotwords = self.controller.rec_long_msg()
         print("hw ricevute")
@@ -325,8 +326,8 @@ class OperatorApp(ctk.CTk, Listener):
         if self.conn:
             self.controller.send("exit")
 
-        if self.mic_keep_alive:
-            self.mic_keep_alive.stop()
+        if self.pavucontrol:
+            self.pavucontrol.terminate()
 
         if self.vad:
             if self.vad.pause == True:
@@ -341,8 +342,8 @@ class OperatorApp(ctk.CTk, Listener):
         if self.conn:
             self.controller.send("exit")
 
-        if self.mic_keep_alive:
-            self.mic_keep_alive.stop()
+        if self.pavucontrol:
+            self.pavucontrol.terminate()
 
         if self.vad:
             self.vad.close()
