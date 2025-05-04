@@ -123,8 +123,8 @@ class Vad:
                                     self.listener.on_listening_confirm()
                                 elif cer > 0.7:
                                     self.tts.speak("Non sono sicuro, riprova")
-                            except BaseException:
-                                print("Eccezione")
+                            except BaseException as e:
+                                print(f"Error: {e}")
                                 active = False
                         else:
                             transcription = self.__transcribe_chunks(audio_array)   # Decode the speech with Whisper
