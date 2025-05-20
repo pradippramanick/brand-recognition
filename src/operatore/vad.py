@@ -114,7 +114,6 @@ class Vad:
                                     self.tts.speak("Inviato")
                                 elif cer >= 0.5 and cer <= 0.7:
                                     self.tts.speak(result_corrected, self.tts.get_lang(result_corrected))
-                                    print(int(time.time()))
                                     self.listener.on_asking_confirm()
                                     self.tts.speak("Dire 'conferma' o 'riprova'")
 
@@ -174,7 +173,6 @@ class Vad:
         # Check if audio_data is empty or total silence
         max_val = np.max(np.abs(audio_data))
         if audio_data.size == 0 or max_val == 0:
-            print("come immaginavo")
             return {"probabilities": np.array([[1.0, 0.0]]), "audio_data": audio_data}  # Default: silence
         # Normalization
         audio_data = audio_data / max_val
