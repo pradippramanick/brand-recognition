@@ -54,13 +54,16 @@ class Vad:
         self.pause = False
 
         self._num = 0       # TEST
-        self.folder = None  # TEST
+        self.folder = ""  # TEST
 
     def listen(self, operator_code):
         # TEST
-        self.folder = f"log/{operator_code}"
-        if not os.path.exists(self.folder):
-            os.makedirs(self.folder)
+        new_folder = f"log/{operator_code}"
+        if self.folder != new_folder:
+            self.folder = new_folder
+            self._num = 0
+            if not os.path.exists(self.folder):
+                os.makedirs(self.folder)
 
         # TEST
         self.__write("START LISTEN")

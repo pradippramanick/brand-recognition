@@ -212,7 +212,7 @@ class OperatorApp(ctk.CTk, Listener):
         bottom_border = ctk.CTkFrame(master=header_frame, height=2, fg_color="#000000")
         bottom_border.grid(row=0, column=0, sticky="sew", pady=0)
     
-        header_label = ctk.CTkLabel(master=header_frame, text=f"codice: {self.operator_code}  carrello: {self.operator_cart}", font=("Inter", 48))
+        header_label = ctk.CTkLabel(master=header_frame, text=f"codice: {(self.operator_code)}  carrello: {self.operator_cart}", font=("Inter", 48))
         header_label.grid(row=0, column=0, sticky="w", padx=40, pady=10)
         
         # Frame centrale per microfono (trasparente)
