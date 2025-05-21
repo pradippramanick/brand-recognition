@@ -162,4 +162,4 @@ def remove_operator(operator):
     with __globals__.operator_lock:
         if (operator in __globals__.operators):
             __globals__.operators.remove(operator)
-            print(f"{operator.get("addr")}: operatore rimosso dalla lista")
+            print(f"{operator.get('addr')}: operatore rimosso dalla lista")
