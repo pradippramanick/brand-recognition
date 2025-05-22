@@ -16,13 +16,15 @@ class Text_to_speech:
             "tedesco": "de"
         }
         self.lang2model = {
-            'de': 'tts_models/de/thorsten/tacotron2-DDC'
+            'de': 'tts_models/de/thorsten/tacotron2-DDC',
+            'it' : 'tts_models/it/mai_female/glow-tts',
+            'en' : 'tts_models/en/ljspeech/tacotron2-DDC'
             # Fill this mapping with langauge-model pairs
         }
-        self.tts = TTS(model_name='tts_models/en/ljspeech/tacotron2-DDC') # load the default model
+        self.tts = TTS(model_name=self.lang2model['it']) # load the default model
 
     def set_language(self,lang):
-        if lang!='en':
+        if lang not in self.lang2model:
             print('Other languages are not implemented. Select from here')
             print(TTS().list_models())
         self.tts = TTS(model_name=self.lang2model[lang])
@@ -30,7 +32,7 @@ class Text_to_speech:
     def speak(self, text):
         # Initialize the langauge using set_language to avoid loading the model every time, making it faster
         # Genera l'audio con gTTS
-        wav = np.array(self.tts.tts(text=text)) # set emotion, speed, etc. as required and supported by the model
+        wav = np.array(self.tts.tts(text=text,speed=0.7))
 
         # Normalize and convert to 16-bit PCM
         wav_norm = wav * (32767 / max(0.01, np.max(np.abs(wav))))
@@ -48,7 +50,7 @@ class Text_to_speech:
 
         # Aspetta che l'audio finisca
         while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
+            pygame.time.Clock().tick(10) # todo set it to audio length + buffer
     
     def get_lang(self, text):
         for name in self.lang_list:
@@ -59,5 +61,5 @@ class Text_to_speech:
         return "it"
 
 if __name__=='__main__':
-    tts_wrapper = Text_to_speech(lang_list=['english'])
-    tts_wrapper.speak('Calvin Klein')
+    tts_wrapper = Text_to_speech(lang_list=['inglese','italiano'])
+    tts_wrapper.speak("Aqua di Parma")

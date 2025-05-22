@@ -1,6 +1,10 @@
 import io
+
+import numpy as np
 import pygame # type: ignore
-from gtts import gTTS # type: ignore
+import scipy
+from TTS.api import TTS
+# python3 -m pip install TTS
 
 class Text_to_speech:
     def __init__(self, lang_list):
@@ -12,24 +16,42 @@ class Text_to_speech:
             "spagnolo": "es",
             "tedesco": "de"
         }
+        self.lang2model = {
+            'de': 'tts_models/de/thorsten/tacotron2-DDC',
+            'it': 'tts_models/it/mai_female/glow-tts',
+            'en': 'tts_models/en/ljspeech/tacotron2-DDC'
+            # Fill this mapping with langauge-model pairs
+        }
+        self.tts = TTS(model_name=self.lang2model['it'])  # load the default model
 
-    def speak(self, text, lang="it"):
+    def set_language(self,lang):
+        if lang not in self.lang2model:
+            print('Other languages are not implemented. Select from here')
+            print(TTS().list_models())
+        self.tts = TTS(model_name=self.lang2model[lang])
+
+    def speak(self, text):
+        # Initialize the langauge using set_language to avoid loading the model every time, making it faster
         # Genera l'audio con gTTS
-        tts = gTTS(text=text, lang=lang)
-        
-        # Salva il file in un buffer di memoria
+        wav = np.array(self.tts.tts(text=text, speed=0.7))
+
+        # Normalize and convert to 16-bit PCM
+        wav_norm = wav * (32767 / max(0.01, np.max(np.abs(wav))))
+        wav_int16 = wav_norm.astype(np.int16)
+
+        # Write to a BytesIO buffer as WAV
         audio_buffer = io.BytesIO()
-        tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)  # Riporta il cursore all'inizio
+        scipy.io.wavfile.write(audio_buffer, self.tts.synthesizer.output_sample_rate, wav_int16)
+        audio_buffer.seek(0)
 
         # Inizializza pygame per la riproduzione
         pygame.mixer.init()
-        pygame.mixer.music.load(audio_buffer, "mp3")  # Carica il buffer come mp3
+        pygame.mixer.music.load(audio_buffer)  # WAV format works with buffer
         pygame.mixer.music.play()
 
         # Aspetta che l'audio finisca
         while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
+            pygame.time.Clock().tick(10)  # todo set it to audio length + buffer 1 s
     
     def get_lang(self, text):
         for name in self.lang_list:
