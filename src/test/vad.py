@@ -137,7 +137,7 @@ class Vad:
                                     self.controller.send(result_corrected)
 
                                     self.tts.speak("Inviato")
-                                    self.__write(f"SEND END - {int(time.time())}")    # TEST
+                                    self.__write(f"SEND END - {int(time.time())}\n")    # TEST
                                 elif cer >= 0.5 and cer <= 0.7:
                                     self.__write(f"CONFIRM START - {int(time.time())}")    # TEST
                                     self.tts.speak(result_corrected, self.tts.get_lang(result_corrected))
@@ -169,14 +169,14 @@ class Vad:
                                     self.controller.send(result_corrected)
 
                                     self.tts.speak("Inviato")
-                                    self.__write(f"SEND END (after confirm) - {int(time.time())}")    # TEST
+                                    self.__write(f"SEND END (after confirm) - {int(time.time())}\n")    # TEST
                                 
                                 active = True 
                                 confirm_mode = False
-                                self.__write(f"CONFIRM END - {int(time.time())}")    # TEST
+                                self.__write(f"CONFIRM END - {int(time.time())}\n")    # TEST
                             elif ('attiva' in transcription.lower()):
                                 active = True
-                                self.__write(f"ACTIVE") # TEST
+                                self.__write(f"ACTIVE\n") # TEST
 
                         if not self.running:
                             break
