@@ -31,7 +31,7 @@ class Vad:
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.pipe = pipeline(
             "automatic-speech-recognition",
-            model="openai/whisper-small",
+            model="openai/whisper-tiny", # if tiny doesn't work well, we can use faster-whisper with distilled models
             chunk_length_s=int(SAMPLE_RATE * STEP),
             device=device,
         )
