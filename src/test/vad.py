@@ -121,8 +121,12 @@ class Vad:
 
                         if (active):
                             try:
+                                start_time = time.perf_counter()
                                 result = self.decoder.decode(audio_array)
                                 result_corrected, cer = self.decoder.post_correction(result)
+                                end_time = time.perf_counter()
+                                elapsed_ms = (end_time - start_time) * 1000
+                                print(f"Time taken for CTC decoder and post correction: {elapsed_ms:.2f} ms")
 
                                 self.__write(f"DECODER: {result_corrected}, CER: {cer} - {int(time.time())}")    # TEST
 
@@ -227,8 +231,13 @@ class Vad:
         # Create a dict with audio metadata
         input_features = {"array": audio_array_normalized, "sampling_rate": 16000}
         # Transcription with Whisper
+        start_time = time.perf_counter()
         transcription = self.pipe(input_features, generate_kwargs={"language": "italian"})["text"]
+        end_time = time.perf_counter()
+        elapsed_ms = (end_time - start_time) * 1000
+        print(f"Time taken for self.pipe(): {elapsed_ms:.2f} ms")
         print(transcription)
+
         return transcription
     
     def __save_audio(self, audio_array):    # TEST

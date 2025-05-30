@@ -28,9 +28,9 @@ class Decoder:
             logits,
             hotwords=self.hotwords,
             hotword_weight=self.hotwords_weight,
-            beam_width=150,
-            beam_prune_logp=-45,
-            token_min_logp=-40
+            beam_width=200,
+            beam_prune_logp=-25,
+            token_min_logp=-20
         )
 
         return result
