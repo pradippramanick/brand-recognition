@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import __globals__
 from database import get_db
@@ -42,18 +43,24 @@ def login(conn, addr):
         res = { "code": f"{code_valid}", "cart": f"{cart_valid}" }
         conn.sendall(json.dumps(res).encode() + b"\n\nEND\n\n")
 
-    print(f"{addr}: operatore {code} carrello {cart}")
+        chain = (int(cart) + 1) // 2 # calcolo la filiera in base al carrello (carrelli 1 e 2 = filiera 1, carrelli 3 e 4 = filiera 2, ecc)
+
+    print(f"{addr}: operatore {code} carrello {cart}, filiera {chain}")
 
     # Aggiunta operatore alla lista
     operator = {
         "addr": addr,
         "code": code,
-        "cart": cart
+        "cart": cart,
+        "chain": chain
     }
 
     with __globals__.operator_lock:
         __globals__.operators.append(operator)
         print(f"{addr}: operatore aggiunto alla lista")
+
+    if not is_chain_initialized(conn, operator):
+        init_chain(conn, operator)
 
     return operator
 
@@ -111,10 +118,16 @@ def work(conn, addr, operator):
                     # se sono qui vuol dire che avevo un nome già corretto (a meno di maiuscole, per questo recupero il nome corrispondente dal db)
                     brand = Brand_controller.get_name(session, msg)
 
-            # Genera log
-            with next(get_db()) as session:
-                Log_controller.create(session, operator.get("code"), brand, operator.get("cart"))
-                print(f"{addr}: log generato")
+            # ottengo il numero del cassettone
+            bin = get_bin(brand, operator.get('chain'))
+            
+            if bin is not None:
+                # Genera log
+                with next(get_db()) as session:
+                    Log_controller.create(session, operator.get('code'), brand, operator.get('cart'), operator.get('chain'), bin)
+                    print(f"{addr}: log generato")
+            else:
+                print(f"{addr}: brand non registrato perchè non presente in questa filiera")
 
 def check_code(code):
     if code == "\n\nNONE\n\n":
@@ -157,6 +170,59 @@ def check_cart(cart):
             return "already logged"
         else:
             return "ok"
+        
+def is_chain_initialized(conn, current_operator):
+    chain = current_operator.get('chain')
+
+    find = False
+    with __globals__.operator_lock:
+        for operator in __globals__.operators:
+            if operator != current_operator:
+                if (int(operator.get('chain')) == chain):
+                    find = True
+                if find:
+                    print(f"{operator.get('addr')}: filiera già inizializzata")
+                    conn.sendall("already_init".encode())
+                    return True
+                
+    print(f"{operator.get('addr')}: filiera da inizializzare")
+    conn.sendall("not_init".encode())
+    return False
+
+def init_chain(conn, current_operator):
+    chain = current_operator.get('chain')                           # recupero il numero di filiera
+
+    with next(get_db()) as session:
+        brands = Brand_controller.get_name_list(session)            # recupero la lista dei nomi di brand
+    conn.sendall(json.dumps(brands).encode() + b"\n\nEND\n\n")      # la mando
+
+    bins_list = rec_long_msg(conn)                                  # ricevo una lisa di 24 elementi, in cui ogni elemento contiene 0, 1 o più brand
+    print(f"filiera {chain}: {bins_list}")
+
+    with __globals__.chain_lock:                                    # acquisisco il lock della variabile globale che conserva la composizione della filiere
+        __globals__.chains[chain] = bins_list                       # inserisco nella lista di filiere (in corrispondenza del numero di filiera), la lista dei cassettoni
+
+def rec_long_msg(conn):
+    buffer = b""
+    while True:
+        packet = conn.recv(1024)
+        if not packet:
+            break
+        buffer += packet
+        if b"\n\nEND\n\n" in buffer:
+            break
+    return json.loads(buffer.replace(b"\n\nEND\n\n", b"").decode())
+
+def get_bin(brand, n_chain):
+    with __globals__.chain_lock:
+        chain_list = __globals__.chains[n_chain]
+        position = 0
+        for list in chain_list:
+            position+=1
+            for b in list:
+                if b == brand:
+                    return position
+    return None
     
 def remove_operator(operator):
     with __globals__.operator_lock:

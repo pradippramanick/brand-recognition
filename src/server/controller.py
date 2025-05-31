@@ -60,6 +60,12 @@ class Brand_controller:
     def get_list(db: Session):
         brands = db.query(Brand).all()
         return [ { f"{(brand.normalized_name if brand.normalized_name else brand.name).lower()}": f"{brand.language}" } for brand in brands]
+    
+    def get_name_list(db: Session):
+        brands = db.query(Brand).all()
+        list = [ brand.name for brand in brands]
+        list.remove("stop")
+        return list
 
     def get_name(db: Session, name: str):
         db_brand = db.query(Brand).filter(func.lower(Brand.name) == name.lower()).first()
@@ -131,8 +137,8 @@ class Operator_controller:
         return False
     
 class Log_controller:
-    def create(db: Session, code: str, brand: str, cart: int):
-        db_log = Log(operator_code=code, brand_name=brand, cart=cart)
+    def create(db: Session, code: str, brand: str, cart: int, chain: int, bin: int):
+        db_log = Log(operator_code=code, brand_name=brand, cart=cart, chain=chain, bin=bin)
         db.add(db_log)
         db.commit()
         db.refresh(db_log)
@@ -150,4 +156,4 @@ class Log_controller:
             query = query.filter(Log.timestamp >= day_start, Log.timestamp <= day_end)
         
         logs = query.all()
-        return [{ "id": f"{log.id}", "operator_code": log.operator_code, "brand_name": log.brand_name, "cart": f"{log.cart}", "timestamp": f"{log.timestamp}" } for log in logs]
+        return [{ "id": f"{log.id}", "operator_code": log.operator_code, "brand_name": log.brand_name, "cart": f"{log.cart}", "timestamp": f"{log.timestamp}", "chain": f"{log.chain}", "bin": f"{log.bin}" } for log in logs]

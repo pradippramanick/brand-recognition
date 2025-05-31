@@ -1,6 +1,7 @@
 import tkinter as tk
 import customtkinter as ctk # type: ignore
 from PIL import Image
+from tkinter import messagebox
 
 import subprocess
 import threading
@@ -190,6 +191,13 @@ class OperatorApp(ctk.CTk, Listener):
                 self.cart_error_str.set("Il numero di carrelli è stato modificato dall'admin. Riprovare")
 
         if code_valid  == "ok" and cart_valid == "ok":
+            self.init_chain(init_vad)
+
+    def init_chain(self, init_vad):
+        msg = self.controller.rec()
+        if msg == "not_init":
+            self.init_chain_page(init_vad)
+        else:
             self.main_page(init_vad)
 
     def main_page(self, init_vad):
@@ -242,6 +250,111 @@ class OperatorApp(ctk.CTk, Listener):
         
         self.vad_thread = threading.Thread(target=self.vad.listen, daemon=True)
         self.vad_thread.start()
+
+
+    def init_chain_page(self, init_vad):
+        self.clear_screen()
+        self.protocol("WM_DELETE_WINDOW", lambda: messagebox.showerror("Errore", "Configura la filiera"))
+
+        self.brands = self.controller.rec_long_msg()
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure((0, 1), weight=1)
+
+        label = ctk.CTkLabel(master=self, text="Inizializza filiera", font=("Inter", 64))
+        label.grid(row=0, column=0, pady=20)
+
+        # Dizionario per salvare le selezioni di ogni bottone (1–24)
+        self.selected = {i: [] for i in range(1, 25)}
+
+        # Layout dei 24 bottoni in griglia
+        frame_btns = ctk.CTkFrame(master=self, corner_radius=25)
+        frame_btns.grid(row=1, column=0, pady=20)
+
+        for i in range(1, 25):
+            btn = ctk.CTkButton(
+                master=frame_btns,
+                text=str(i),
+                width=80,
+                text_color=self.colors.get("text_white"),
+                font=("Inter", 32),
+                fg_color=self.colors.get("button"),
+                hover_color=self.colors.get("hover"),
+                corner_radius=15,
+                command=lambda idx=i: self.open_window(idx)
+            )
+            row, col = divmod(i - 1, 6)  # 6 colonne
+            btn.grid(row=row, column=col, padx=15, pady=15)
+
+        send_btn = ctk.CTkButton(
+            master=self,
+            text="Conferma",
+            text_color=self.colors.get("text_white"),
+            border_spacing=10,
+            font=("Inter", 32),
+            fg_color=self.colors.get("button"),
+            hover_color=self.colors.get("hover"),
+            corner_radius=15,
+            command=lambda: self.send_bins(init_vad)
+        )
+        send_btn.grid(row=3, column=0, pady=20)
+
+    def open_window(self, idx):
+        window = ctk.CTkToplevel(self)
+        window.title(f"Selezione per cassettone {idx}")
+        window.geometry("400x600")
+        window.minsize(400, 600)
+
+        checkbox_vars = {}
+
+        # Scrollable frame
+        scrollable_frame = ctk.CTkScrollableFrame(master=window, width=380, height=500)
+        scrollable_frame.pack(padx=10, pady=10, fill="both", expand=True)
+
+        # --- Aggancio del mousewheel per lo scroll con touchpad ---
+        def _on_mousewheel(event):
+            scrollable_frame._parent_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+        # Windows e Mac (event.delta)
+        scrollable_frame._parent_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        # Linux (event.num)
+        scrollable_frame._parent_canvas.bind_all("<Button-4>", lambda e: scrollable_frame._parent_canvas.yview_scroll(-1, "units"))
+        scrollable_frame._parent_canvas.bind_all("<Button-5>", lambda e: scrollable_frame._parent_canvas.yview_scroll(1, "units"))
+        # ---------------------------------------------------------
+
+        # Checkbox per ogni brand
+        for brand in self.brands:
+            var = ctk.BooleanVar(value=brand in self.selected[idx])
+            checkbox = ctk.CTkCheckBox(master=scrollable_frame, text=brand, variable=var)
+            checkbox.pack(anchor="w", padx=10, pady=4)
+            checkbox_vars[brand] = var
+
+        # Bottone di salvataggio
+        save_button = ctk.CTkButton(
+            master=window,
+            text="Salva",
+            text_color=self.colors.get("text_white"),
+            border_spacing=10,
+            font=("Inter", 32),
+            fg_color=self.colors.get("button"),
+            hover_color=self.colors.get("hover"),
+            corner_radius=15,
+            command=lambda: self.save_selection(idx, checkbox_vars, window))
+        save_button.pack(pady=10)
+
+    def save_selection(self, idx, checkbox_vars, window):
+        self.selected[idx] = [brand for brand, var in checkbox_vars.items() if var.get()]
+        window.destroy()
+
+    def send_bins(self, init_vad):
+        list = [self.selected[i] for i in range(1, 25)]
+        print(list)
+        if not any(list):  # tutte le sottoliste sono vuote
+            messagebox.showerror("Errore", "Almeno un cassettone deve essere associato ad almeno un brand.")
+        else:
+            self.controller.send_long_msg(list)
+            self.main_page(init_vad)
+
 
     def load_img(self):
         self.img_attivo = Image.open("img/attivo.png")

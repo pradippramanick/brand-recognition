@@ -18,6 +18,9 @@ class Controller:
     def send(self, msg):
         self.conn.sendall(msg.encode())
 
+    def send_long_msg(self, msg):
+        self.conn.sendall(json.dumps(msg).encode() + b"\n\nEND\n\n")
+
     def rec(self):
         return self.conn.recv(1024).decode()
     

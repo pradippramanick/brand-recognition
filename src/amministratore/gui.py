@@ -556,7 +556,7 @@ class AdminApp(ctk.CTk):
 
         self.tree = ttk.Treeview(
             master=table_frame,
-            columns=("Id", "Operatore", "Brand", "Carrello", "Data"),
+            columns=("Id", "Operatore", "Brand", "Carrello", "Data", "Filiera", "Cassettone"),
             show="headings",
             yscrollcommand=vsb.set,
             style="Custom.Treeview"
@@ -569,6 +569,8 @@ class AdminApp(ctk.CTk):
         self.tree.heading("Brand", text="Brand")
         self.tree.heading("Carrello", text="Carrello")
         self.tree.heading("Data", text="Data")
+        self.tree.heading("Filiera", text="Filiera")
+        self.tree.heading("Cassettone", text="Cassettone")
 
         # Caricare i dati dal server
         self.load_logs(code="", day="")
@@ -591,7 +593,7 @@ class AdminApp(ctk.CTk):
             self.tree.delete(row)
 
         for log in data:
-            self.tree.insert("", "end", values=(log["id"], log["operator_code"], log["brand_name"], log["cart"], log["timestamp"]))
+            self.tree.insert("", "end", values=(log["id"], log["operator_code"], log["brand_name"], log["cart"], log["timestamp"], log["chain"], log["bin"]))
 
     # Carrelli
     def change_cart_page(self):

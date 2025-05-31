@@ -33,6 +33,8 @@ class Log(Base):
     brand_name = Column(String, ForeignKey("brand.name"), nullable=False)       # Nome del brand
     cart = Column(Integer, nullable=False)
     timestamp = Column(DateTime, default=lambda: datetime.now(pytz.timezone("Europe/Rome")))
+    chain = Column(Integer, nullable=False)
+    bin = Column(Integer, nullable=False)
     
     operator = relationship("Operator", foreign_keys=[operator_code])           # Relazione: log_record.operator restituisce la tupla dell'operatore
     brand = relationship("Brand", foreign_keys=[brand_name])                    # Relazione: log_record.brand restituisce la tupla del brand
