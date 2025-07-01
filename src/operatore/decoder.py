@@ -1,3 +1,5 @@
+import torch
+
 from my_pyctcdecode import build_ctcdecoder
 import nemo.collections.asr as nemo_asr     # type: ignore
 from jiwer import cer                       # type: ignore
@@ -5,7 +7,8 @@ from jiwer import cer                       # type: ignore
 class Decoder:
     def __init__(self, hotwords=[]):
         # Load pretrained model
-        self.asr_model = nemo_asr.models.EncDecCTCModel.from_pretrained(model_name="stt_it_quartznet15x5")
+        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        self.asr_model = nemo_asr.models.EncDecCTCModel.from_pretrained(model_name="stt_it_quartznet15x5",map_location=self.device)
 
         # Hotwords
         self.hotwords_weight = 15.0
@@ -15,10 +18,10 @@ class Decoder:
         self.asr_model.sample_rate = 16000
             
         # Transcription: returns an Hypotesis objects
-        hypotheses = self.asr_model.transcribe([file_audio], return_hypotheses=True, batch_size=1)
+        hypotheses = self.asr_model.transcribe([file_audio.to(self.device)], return_hypotheses=True, batch_size=1)
 
         # Estract logits from the first Hypothesis; Note: `alignments` contains logits [time, vocab_size]
-        logits = hypotheses[0].alignments.numpy()  # Converts in NumPy array
+        logits = hypotheses[0].alignments.cpu().numpy()  # Converts in NumPy array
 
         # Decoder building
         decoder = build_ctcdecoder(self.asr_model.decoder.vocabulary)

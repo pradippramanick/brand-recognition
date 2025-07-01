@@ -23,17 +23,21 @@ class Vad:
         self.listener = listener                    # Per aggiornare lo stato della GUI
         self.controller = controller                # Per comunicare con il server
 
+        # Set device for PyTorch
+        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+
         # Load pretrained model from NeMo library in inference mode (not training mode)
-        self.vad = EncDecClassificationModel.from_pretrained(model_name="vad_multilingual_marblenet")
+        self.vad = EncDecClassificationModel.from_pretrained(model_name="vad_multilingual_marblenet",
+                                                             map_location=self.device)
         self.vad.eval()
 
         # Whisper
-        device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
         self.pipe = pipeline(
             "automatic-speech-recognition",
             model="openai/whisper-tiny", # if tiny doesn't work well, we can use faster-whisper with distilled models
             chunk_length_s=int(SAMPLE_RATE * STEP),
-            device=device,
+            device=self.device,
         )
 
         # PyAudio
@@ -177,8 +181,8 @@ class Vad:
         # Normalization
         audio_data = audio_data / max_val
         # Convert in PyTorch Tensor
-        audio_tensor = torch.tensor(audio_data).unsqueeze(0).to(torch.float32)
-        audio_length = torch.tensor([len(audio_data)], dtype=torch.int64)
+        audio_tensor = torch.tensor(audio_data).unsqueeze(0).to(torch.float32).to(self.device)  # Add batch dimension and convert to float32
+        audio_length = torch.tensor([len(audio_data)], dtype=torch.int64,device=self.device)
         # Send chunck to VAD model
         logits = self.vad.forward(input_signal=audio_tensor, input_signal_length=audio_length)   # Get logits (raw prediction)
         # Convert logits into probabilities as bidimentional array
