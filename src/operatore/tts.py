@@ -35,6 +35,8 @@ class Text_to_speech:
         # Genera l'audio con gTTS
         wav = np.array(self.tts.tts(text=text, speed=0.7))
 
+        #todo Clip the audio to max 2seconds, sometimes EN modes halucinate and generates a long audio
+
         # Normalize and convert to 16-bit PCM
         wav_norm = wav * (32767 / max(0.01, np.max(np.abs(wav))))
         wav_int16 = wav_norm.astype(np.int16)

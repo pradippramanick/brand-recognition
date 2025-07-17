@@ -90,9 +90,10 @@ class Vad:
                     break
                 
                 # If there was a speech and now is over, decode the speech
-                if ((not is_talking) & (was_talking)):
+                if (not is_talking) & was_talking:
                     print('Speech is over')
-                    if (len(chunks)>=2):
+                    print(len(chunks))
+                    if len(chunks)>=1:  # If there are chunks to process
                         self.stream.stop_stream()
                         print("Stopped listening; I'm processing...")
                         self.listener.on_processing()
@@ -104,27 +105,31 @@ class Vad:
 
                         if (active):
                             try:
+                                tim1 = time.time()
                                 result = self.decoder.decode(audio_array)
+                                print(result)
+                                print((time.time()-tim1)/1000)
                                 result_corrected, cer = self.decoder.post_correction(result)
+                                print('Corrected result:', result_corrected, 'CER:', cer)
 
                                 if result == "stop":
                                     active = False
-                                elif cer < 0.5:
+                                elif cer < 0.7:
                                     self.listener.on_sent(result_corrected)
-                                    self.tts.speak(result_corrected, self.tts.get_lang(result_corrected))
+                                    self.tts.speak(result_corrected)
 
                                     self.controller.send(result_corrected)
 
                                     self.tts.speak("Inviato")
-                                elif cer >= 0.5 and cer <= 0.7:
-                                    self.tts.speak(result_corrected, self.tts.get_lang(result_corrected))
+                                elif 0.7 <= cer <= 0.9:
+                                    self.tts.speak(result_corrected)
                                     self.listener.on_asking_confirm()
                                     self.tts.speak("Dire 'conferma' o 'riprova'")
 
                                     confirm_mode = True
                                     active = False
                                     self.listener.on_listening_confirm()
-                                elif cer > 0.7:
+                                elif cer > 0.9:
                                     self.tts.speak("Non sono sicuro, riprova")
                             except BaseException as e:
                                 print(f"Error: {e}")
