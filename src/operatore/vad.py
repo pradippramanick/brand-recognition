@@ -120,7 +120,8 @@ class Vad:
 
                                     self.controller.send(result_corrected)
 
-                                    self.tts.speak("Inviato")
+                                    #self.tts.speak("Inviato")
+
                                 elif 0.7 <= cer <= 0.9:
                                     self.tts.speak(result_corrected)
                                     self.listener.on_asking_confirm()
@@ -146,7 +147,7 @@ class Vad:
                                     self.listener.on_sent(result_corrected)
                                     self.controller.send(result_corrected)
 
-                                    self.tts.speak("Inviato")
+                                    #self.tts.speak("Inviato")
                                 
                                 active = True 
                                 confirm_mode = False
