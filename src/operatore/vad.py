@@ -105,16 +105,14 @@ class Vad:
 
                         if (active):
                             try:
-                                tim1 = time.time()
                                 result = self.decoder.decode(audio_array)
                                 print(result)
-                                print((time.time()-tim1)/1000)
                                 result_corrected, cer = self.decoder.post_correction(result)
                                 print('Corrected result:', result_corrected, 'CER:', cer)
 
                                 if result == "stop":
                                     active = False
-                                elif cer < 0.7:
+                                elif cer < 0.76:
                                     self.listener.on_sent(result_corrected)
                                     self.tts.speak(result_corrected)
 
@@ -122,7 +120,7 @@ class Vad:
 
                                     #self.tts.speak("Inviato")
 
-                                elif 0.7 <= cer <= 0.9:
+                                elif 0.76 <= cer <= 0.9:
                                     self.tts.speak(result_corrected)
                                     self.listener.on_asking_confirm()
                                     self.tts.speak("Dire 'conferma' o 'riprova'")

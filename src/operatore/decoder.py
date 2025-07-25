@@ -11,7 +11,7 @@ class Decoder:
         self.asr_model = nemo_asr.models.EncDecCTCModel.from_pretrained(model_name="stt_it_quartznet15x5",map_location=self.device)
 
         # Hotwords
-        self.hotwords_weight = 15.0
+        self.hotwords_weight = 20.0
         self.brands = hotwords
         self.hotwords = []
         for brand in self.brands:

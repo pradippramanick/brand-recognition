@@ -151,7 +151,7 @@ class OperatorApp(ctk.CTk, Listener):
             self.operator_cart = "\n\nNONE\n\n"
         
         res = self.controller.check_data(self.operator_code, self.operator_cart)
-        code_valid = res.get("code")
+        code_valid = res.get("code") # todo sometimes crashes AttributeError: 'list' object has no attribute 'get'
         cart_valid = res.get("cart")
 
         if code_valid == "none":
