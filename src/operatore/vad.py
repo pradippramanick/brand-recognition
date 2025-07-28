@@ -1,11 +1,9 @@
 from nemo.collections.asr.models import EncDecClassificationModel   # type: ignore
 import torch                                                        # type: ignore
 import numpy as np                                                  # type: ignore
-from transformers import pipeline                                   # type: ignore
 import pyaudio as pa
 from decoder import Decoder
 from tts import Text_to_speech
-import time
 
 # Audio parameters
 SAMPLE_RATE         =   16000                   # Frequenza di campionamento
@@ -30,15 +28,6 @@ class Vad:
         self.vad = EncDecClassificationModel.from_pretrained(model_name="vad_multilingual_marblenet",
                                                              map_location=self.device)
         self.vad.eval()
-
-        # Whisper
-
-        self.pipe = pipeline(
-            "automatic-speech-recognition",
-            model="openai/whisper-tiny", # if tiny doesn't work well, we can use faster-whisper with distilled models
-            chunk_length_s=int(SAMPLE_RATE * STEP),
-            device=self.device,
-        )
 
         # PyAudio
         self.p = pa.PyAudio()
@@ -103,7 +92,7 @@ class Vad:
                         if not self.running:
                             break
 
-                        if (active):
+                        if active:
                             try:
                                 result = self.decoder.decode(audio_array)
                                 print(result)
@@ -139,7 +128,7 @@ class Vad:
                             if not self.running:
                                 break
 
-                            if(confirm_mode):
+                            if confirm_mode:
                                 if 'conf' in transcription.lower():
                                     # Communication with server
                                     self.listener.on_sent(result_corrected)
@@ -149,7 +138,7 @@ class Vad:
                                 
                                 active = True 
                                 confirm_mode = False
-                            elif ('attiva' in transcription.lower()):
+                            elif 'attiva' in transcription.lower():
                                 active = True
 
                         if not self.running:
@@ -157,6 +146,7 @@ class Vad:
 
                         self.stream.start_stream()
                         print('Listening...')
+                        self.tts.play_beep() # notify the user that the listening is restarted
 
                         if not active and not confirm_mode:
                             self.listener.on_waiting_keyword()

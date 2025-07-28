@@ -9,6 +9,7 @@ from TTS.api import TTS
 class Text_to_speech:
     def __init__(self, lang_list):
         self.lang_list = lang_list
+        pygame.mixer.init()
         self.lang_map = {
             "italiano": "it",
             "inglese": "en",
@@ -23,6 +24,15 @@ class Text_to_speech:
             # Fill this mapping with langauge-model pairs
         }
         self.tts = TTS(model_name=self.lang2model['it'])  # load the default model
+
+        #preload the beep sound
+        self.beep_player = pygame.mixer.Sound("audios/beep1.wav")
+
+    def play_beep(self):
+        """Play a beep sound to indicate an event."""
+        self.beep_player.play() # Play the beep sound
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(1)
 
     def set_language(self,lang):
         if lang not in self.lang2model:
@@ -47,7 +57,7 @@ class Text_to_speech:
         audio_buffer.seek(0)
 
         # Inizializza pygame per la riproduzione
-        pygame.mixer.init()
+
         pygame.mixer.music.load(audio_buffer)  # WAV format works with buffer
         pygame.mixer.music.play()
 

@@ -151,6 +151,10 @@ class OperatorApp(ctk.CTk, Listener):
             self.operator_cart = "\n\nNONE\n\n"
         
         res = self.controller.check_data(self.operator_code, self.operator_cart)
+        print(res)
+        if res.istype(list):
+            code_valid = res[0]  # Assuming the first element is the code validation
+            cart_valid = res[1]
         code_valid = res.get("code") # todo sometimes crashes AttributeError: 'list' object has no attribute 'get'
         cart_valid = res.get("cart")
 
