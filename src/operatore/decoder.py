@@ -1,4 +1,7 @@
+import time
+
 import torch
+from scipy.io import wavfile
 
 from my_pyctcdecode import build_ctcdecoder
 import nemo.collections.asr as nemo_asr     # type: ignore
@@ -17,11 +20,15 @@ class Decoder:
         for brand in self.brands:
             self.hotwords.extend(brand.split(" "))
         print("Decoder hotwords:", self.hotwords)
+        self.c = time.time()
     
     def decode(self, file_audio):
         self.asr_model.sample_rate = 16000
-            
-        # Transcription: returns an Hypotesis objects
+
+        #save file_audio to an wav file
+
+
+        # Transcription: returns a Hypothesis objects
         hypotheses = self.asr_model.transcribe([file_audio], return_hypotheses=True, batch_size=1)
 
         # Estract logits from the first Hypothesis; Note: `alignments` contains logits [time, vocab_size]
@@ -39,7 +46,7 @@ class Decoder:
             beam_prune_logp=-40,
             token_min_logp=-14
         )
-
+        wavfile.write('log' + result + str(self.c) + '.wav', 16000, file_audio)
         return result
     
     def post_correction(self, word):
@@ -62,4 +69,6 @@ class Decoder:
         # Return the brand with the lower CER
         if result == "":
             result = word
+
+
         return result, min_e

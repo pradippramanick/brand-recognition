@@ -2,7 +2,6 @@ import tkinter as tk
 import customtkinter as ctk # type: ignore
 from PIL import Image
 from tkinter import messagebox
-
 import subprocess
 import threading
 import time
@@ -152,7 +151,7 @@ class OperatorApp(ctk.CTk, Listener):
         
         res = self.controller.check_data(self.operator_code, self.operator_cart)
         print(res)
-        if res.istype(list):
+        if type(res) is list:  # If the response is a list, unpack it
             code_valid = res[0]  # Assuming the first element is the code validation
             cart_valid = res[1]
         code_valid = res.get("code") # todo sometimes crashes AttributeError: 'list' object has no attribute 'get'
@@ -389,6 +388,16 @@ class OperatorApp(ctk.CTk, Listener):
 
         self.update_idletasks()  # Forza il rendering immediato
 
+    def on_waiting_unmute(self):
+        """Per impostare la pagina di ascolto della keyword"""
+        self.img_attivo.load()
+        image = ctk.CTkImage(self.img_attivo, size=(375, 375))
+        self.icon.configure(image=image)
+
+        self.string.set('Disattiva l\'audio del microfono e parla')
+
+        self.update_idletasks()  # Forza il rendering immediato
+
     def on_processing(self):
         """Per impostare la pagina di elaborazione"""
         image = ctk.CTkImage(self.img_elaborazione, size=(375, 375))
@@ -401,7 +410,7 @@ class OperatorApp(ctk.CTk, Listener):
         image = ctk.CTkImage(self.img_ascolto, size=(375, 375))
         self.icon.configure(image=image)
 
-        self.string.set('dire il brand o "STOP"')
+        self.string.set('dire il brand')
 
     def on_asking_confirm(self):
         """Per impostare la pagina di richiesta conferma"""

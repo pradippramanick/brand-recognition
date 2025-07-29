@@ -1,5 +1,4 @@
 import io
-
 import numpy as np
 import pygame # type: ignore
 import scipy
@@ -27,6 +26,7 @@ class Text_to_speech:
 
         #preload the beep sound
         self.beep_player = pygame.mixer.Sound("audios/beep1.wav")
+        self.beep_player.set_volume(0.5)
 
     def play_beep(self):
         """Play a beep sound to indicate an event."""
