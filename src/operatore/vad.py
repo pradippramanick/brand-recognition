@@ -4,6 +4,7 @@ import numpy as np                                                  # type: igno
 import pyaudio as pa
 from decoder import Decoder
 from tts import Text_to_speech
+from transformers import pipeline
 
 # Audio parameters
 SAMPLE_RATE         =   16000                   # Frequenza di campionamento
@@ -38,6 +39,13 @@ class Vad:
             rate=SAMPLE_RATE,
             input=True,
             frames_per_buffer=CHUNK_SIZE
+        )
+
+        self.pipe = pipeline(
+            "automatic-speech-recognition",
+            model="openai/whisper-small",
+            chunk_length_s=int(SAMPLE_RATE * STEP),
+            device=self.device,
         )
 
         self.running = True
