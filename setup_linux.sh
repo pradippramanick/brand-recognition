@@ -1,68 +1,52 @@
 #!/bin/bash
 
-# === Impostazioni ===
-VENV_DIR=".venv"
+# --- Create Conda Environment ---
+echo "Creating Conda environment from environment.yml..."
+conda env create -f environment.yml
+
+# --- Install system dependency ---
+echo "Installing pavucontrol..."
+sudo apt update && sudo apt install -y pavucontrol
+
+# --- Script Directories and Files ---
+DESKTOP_DIR="$(xdg-user-dir DESKTOP)" || DESKTOP_DIR="$HOME/Desktop"
 ENTRY_SCRIPT_SERVER="server.sh"
 ENTRY_SCRIPT_OPERATOR="operator.sh"
 ENTRY_SCRIPT_ADMIN="admin.sh"
-FONT_SRC_DIR="fonts"
-FONT_DEST="$HOME/.local/share/fonts"
-DESKTOP_FILE_SERVER="$HOME/Scrivania/server.desktop"
-DESKTOP_FILE_OPERATOR="$HOME/Scrivania/operatore.desktop"
-DESKTOP_FILE_ADMIN="$HOME/Scrivania/admin.desktop"
 ICON_PATH_SERVER="icon/server.png"
 ICON_PATH_OPERATOR="icon/operatore.png"
 ICON_PATH_ADMIN="icon/amministratore.png"
 
-# === Ambiente virtuale ===
-if [ ! -d "$VENV_DIR" ]; then
-    echo "Creazione dell'ambiente virtuale..."
-    python3 -m venv "$VENV_DIR"
-fi
+# --- Desktop Shortcuts ---
+echo "Creating desktop shortcuts..."
+mkdir -p "${DESKTOP_DIR}"
 
-source "$VENV_DIR/bin/activate"
-pip install --upgrade pip
-pip install -r requirements.txt
+create_shortcut() {
+    local name="$1"
+    local exec_script="$2"
+    local icon_path="$3"
+    local dest_file="${DESKTOP_DIR}/${name}.desktop"
+    local script_dir="script" # Assuming a 'script' subdirectory
 
-# === Installazione font ===
-mkdir -p "$FONT_DEST"
-cp "$FONT_SRC_DIR"/*.ttf "$FONT_DEST"
-fc-cache -f -v
-echo "Font installato in $FONT_DEST"
+    if [ -f "${script_dir}/${exec_script}" ]; then
+        chmod +x "${script_dir}/${exec_script}"
+    fi
 
-# === Collegamento sul desktop per server ===
-echo "[Desktop Entry]
+    echo "[Desktop Entry]
 Type=Application
-Name=Server
-Exec=$(pwd)/script/$ENTRY_SCRIPT_SERVER
+Name=${name}
+Exec=gnome-terminal -- ${PWD}/${script_dir}/${exec_script}
+Icon=${PWD}/${icon_path}
+Terminal=true
+Categories=Utility;" > "${dest_file}"
 
-Icon=$(pwd)/$ICON_PATH_SERVER
-Terminal=true" > "$DESKTOP_FILE_SERVER"
+    chmod +x "${dest_file}"
+    echo "Shortcut created: ${dest_file}"
+}
 
-chmod +x "$(pwd)/script/$ENTRY_SCRIPT_SERVER"
-chmod +x "$DESKTOP_FILE_SERVER"
-echo "Collegamento creato sul desktop: $DESKTOP_FILE_SERVER"
+create_shortcut "Server" "${ENTRY_SCRIPT_SERVER}" "${ICON_PATH_SERVER}"
+create_shortcut "Operatore" "${ENTRY_SCRIPT_OPERATOR}" "${ICON_PATH_OPERATOR}"
+create_shortcut "Admin" "${ENTRY_SCRIPT_ADMIN}" "${ICON_PATH_ADMIN}"
 
-# === Collegamento sul desktop per operatore ===
-echo "[Desktop Entry]
-Type=Application
-Name=Operatore
-Exec=$(pwd)/script/$ENTRY_SCRIPT_OPERATOR
-Icon=$(pwd)/$ICON_PATH_OPERATOR
-Terminal=false" > "$DESKTOP_FILE_OPERATOR"
+echo "Script completed successfully."
 
-chmod +x "$(pwd)/script/$ENTRY_SCRIPT_OPERATOR"
-chmod +x "$DESKTOP_FILE_OPERATOR"
-echo "Collegamento creato sul desktop: $DESKTOP_FILE_OPERATOR"
-
-# === Collegamento sul desktop per amministratore ===
-echo "[Desktop Entry]
-Type=Application
-Name=Admin
-Exec=$(pwd)/script/$ENTRY_SCRIPT_ADMIN
-Icon=$(pwd)/$ICON_PATH_ADMIN
-Terminal=false" > "$DESKTOP_FILE_ADMIN"
-
-chmod +x "$(pwd)/script/$ENTRY_SCRIPT_ADMIN"
-chmod +x "$DESKTOP_FILE_ADMIN"
-echo "Collegamento creato sul desktop: $DESKTOP_FILE_ADMIN"
