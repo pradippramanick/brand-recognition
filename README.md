@@ -5,7 +5,7 @@ Questo documento fornisce le istruzioni per configurare il progetto su **Linux**
 ## **Setup su Linux**
 ### Prerequisiti
 
-Python 3.12 o precedenti
+Python 3.11 o precedenti
 
 ### 1. **Clonare il repository**
 
@@ -38,7 +38,7 @@ Se lo script di setup non funziona correttamente, verifica che il sistema abbia 
 ## **Setup su Windows**
 ### Prerequisiti
 Macchina virtuale con una distribuzione di Linux (es. Ubuntu, Debian);
-Python 3.12 o precedenti installati sulla macchina viruale
+Python 3.11 o precedenti installati sulla macchina viruale
 
 ### Installazione
 Segui i passaggi per la configurazione su Linux, eseguendoli all'interno della macchina virtuale.
