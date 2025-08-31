@@ -1,16 +1,19 @@
 #!/bin/bash
 
-# === Impostazioni ===
-VENV_DIR=".venv"
-PROGRAM="main.py"
+# Percorso del progetto
+PROJECT_DIR="$HOME/brand-recognition-fixed"
 
-# === Ambiente virtuale ===
-cd
-cd Scrivania
-source "brand/$VENV_DIR/bin/activate"
+# Carica Conda
+source "$HOME/miniconda3/etc/profile.d/conda.sh"
+conda activate totaro
 
-# === Working directory ===
-cd brand/src/server
+# Vai nella cartella del server
+cd "$PROJECT_DIR/src/server"
 
-# Esegue il programma Python
-python3 $PROGRAM
+# Esegui il file Python
+python main.py
+
+# Mantieni il terminale aperto
+echo
+read -p "Premi invio per chiudere..."
+
